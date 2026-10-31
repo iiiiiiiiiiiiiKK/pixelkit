@@ -90,6 +90,7 @@ Requirements: Node.js ≥ 20.19. No environment variables, no database, no API k
 | `npm run typecheck` | `tsc --noEmit` across app, unit tests and e2e specs |
 | `npm run test` | Vitest unit suite |
 | `npm run test:e2e` | Generates image fixtures, then Playwright: Chromium + WebKit (iPhone viewport) |
+| `npm run verify:live` | Drives the deployed site in a real browser and fails on any console or CSP error |
 | `npm run shots` | Re-captures the README screenshots into `docs/screenshots/` |
 
 ## Architecture
@@ -162,6 +163,24 @@ The end-to-end suite drives the real app in a real browser and checks *outcomes*
 - the iPhone project checks no horizontal overflow, that tap targets are ≥ 32 px, that the preview stacks above the settings, and that a photo can be processed with the mobile action bar.
 
 If a browser could not be tested for real, it is listed as untested below instead of being claimed as passing.
+
+### Continuous integration and the live site
+
+Every push to `main` runs the same gates on GitHub's Ubuntu runners. The run for the current `main` passed all of them, including a full Playwright run (Chromium + WebKit) against a fresh `npm ci` install — not only a local result.
+
+After deployment, `npm run verify:live` drives the **production** bundle at <https://iiiiiiiiiiiiiKK.github.io/pixelkit/> and asserts the things that can only break after a build:
+
+| Check | Result |
+| --- | --- |
+| Home responds 200, title, h1, six tool entries, stylesheet applied | pass |
+| Strict CSP meta tag present, **no CSP violations, no console errors** | pass |
+| Author X link resolves to `https://x.com/0xkillcoin` | pass |
+| Upload → compress → download: real JPEG bytes, smaller than the 512 KB source (225 KB), correct file name | pass |
+| Upload → resize to 640 px → download: decodes at exactly **640 × 400** | pass |
+| Language toggle switches the UI to Chinese; theme toggle switches to dark | pass |
+| iPhone 13 viewport: no horizontal overflow, Chinese default, no page errors | pass |
+
+**21/21 checks passed** against the live site.
 
 ## Browser support
 
@@ -296,7 +315,11 @@ npm run dev          # 打开 http://localhost:5180
 
 **https://iiiiiiiiiiiiiKK.github.io/pixelkit/**
 
-部署方式是 GitHub Pages + GitHub Actions：推送到 `main` 后自动执行 lint、类型检查、单元测试与构建，再发布 `dist/`。自建部署只需在仓库的 **Settings → Pages** 里把来源设为 GitHub Actions，并在构建时指定子路径：
+部署方式是 GitHub Pages + GitHub Actions：推送到 `main` 后自动执行 lint、类型检查、单元测试与构建，再发布 `dist/`。CI 在 GitHub 的 Ubuntu runner 上完整通过，包括一次真实的 Playwright 测试（Chromium + WebKit）。
+
+部署完成后，`npm run verify:live` 会用真实浏览器访问**线上生产版本**并逐项校验：首页与六个工具入口、CSP 是否生效且无违规、作者 X 链接、上传后压缩并下载（真实字节且小于原图）、缩放到 640 像素后解码确认为 640×400、中英文与深浅色切换、iPhone 视口无横向溢出——**21 项检查全部通过**。
+
+自建部署只需在仓库的 **Settings → Pages** 里把来源设为 GitHub Actions，并在构建时指定子路径：
 
 ```bash
 GITHUB_PAGES=true npm run build    # 资源路径变为 /pixelkit/
