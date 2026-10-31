@@ -18,6 +18,7 @@
     "test:watch": "vitest",
     "test:e2e": "node scripts/make-fixtures.mjs && playwright test",
     "fixtures": "node scripts/make-fixtures.mjs",
+    "check": "npm run lint && npm run typecheck && npm run test && npm run build",
     "shots": "node scripts/screenshots.mjs",
     "verify:live": "node scripts/verify-live.mjs"
   },

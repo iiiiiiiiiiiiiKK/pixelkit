@@ -9,6 +9,8 @@
  * meta tag) and fails on console errors, so a broken deploy cannot pass.
  */
 import { chromium, devices } from '@playwright/test'
+import { execFileSync } from 'node:child_process'
+import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -75,6 +77,15 @@ check('stylesheet applied', cssLoaded)
 
 // --- a real compress run on the deployed bundle -------------------------------
 const fixture = resolve(projectRoot, 'tests/e2e/fixtures/photo-wide.jpg')
+if (!existsSync(fixture)) {
+  // The sample image is generated on demand (and git-ignored), so a fresh clone
+  // can run this check without manual preparation.
+  console.log('generating image fixtures…')
+  execFileSync(process.execPath, [resolve(projectRoot, 'scripts/make-fixtures.mjs')], {
+    cwd: projectRoot,
+    stdio: 'inherit',
+  })
+}
 await page.goto(`${base}#/tool/compress`, { waitUntil: 'networkidle' })
 await page.setInputFiles('[data-testid="add-more-input"]', fixture)
 await page.waitForSelector('[data-testid="file-item"]', { timeout: 15_000 })
