@@ -1,0 +1,14 @@
+{
+  "name": "PixelKit — Your Images, Perfected.",
+  "short_name": "PixelKit",
+  "description": "A free, privacy-first image toolkit that runs in your browser.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#faf9f6",
+  "theme_color": "#0f6b52",
+  "icons": [
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}
